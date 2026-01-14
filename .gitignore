@@ -3,3 +3,4 @@ venv/
 data/raw/
 data/processed/
 reports/eda/
+reports/baselines/
