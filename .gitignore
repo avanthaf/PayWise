@@ -4,3 +4,5 @@ data/raw/
 data/processed/
 reports/eda/
 reports/baselines/
+
+src\envs\__pycache__
