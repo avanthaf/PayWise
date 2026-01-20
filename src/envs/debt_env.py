@@ -8,7 +8,22 @@ from gymnasium import spaces
 class DebtEnv(gym.Env):
     metadata = {"render_modes": ["human"]}
 
-    def __init__(self, data_path: str):
+    def __init__(
+        self,
+        data_path: str,
+        task_config: dict | None = None,
+    ):
+        default_task = {
+            "income_scale": 1.0,
+            "expense_scale": 1.0,
+            "interest_multiplier": 1.0,
+            "stress_weight": 1.0,
+        }
+
+        self.task_config = default_task
+        if task_config is not None:
+            self.task_config = {**default_task, **task_config}
+
         super().__init__()
         self.df: pd.DataFrame = pd.read_parquet(data_path)
 
@@ -57,7 +72,6 @@ class DebtEnv(gym.Env):
         self.t: int = 0
         self.outstanding_debt: float = 0.0
 
-        # Normalization constants
         self.max_income = max(self.df["monthly_income"].max(), 1.0)
         self.max_expense = max(self.df["monthly_expense_total"].max(), 1.0)
 
@@ -80,11 +94,14 @@ class DebtEnv(gym.Env):
         return self._get_state(), {}
 
     def step(self, action: int):
-        # Current row (safe)
         row = self.current_episode.iloc[self.t]
 
-        income = float(row.at["monthly_income"])
-        expenses = float(row.at["monthly_expense_total"])
+        income = (float(row.at["monthly_income"]) *
+                  self.task_config["income_scale"])
+
+        expenses = (float(row.at["monthly_expense_total"])
+                    * self.task_config["expense_scale"])
+
         min_payment = float(row.at["loan_payment"])
         dti = float(row.at["debt_to_income_ratio"])
 
@@ -162,8 +179,8 @@ class DebtEnv(gym.Env):
     ) -> float:
 
         alpha = 1.0   # debt burden
-        beta = 0.5    # interest proxy
-        gamma = 2.0   # stress penalty
+        beta = 0.5 * self.task_config["interest_multiplier"]  # interest proxy
+        gamma = 2.0 * self.task_config["stress_weight"]  # stress penalty
         delta = 1.0   # debt reduction
 
         debt_reduction = prev_debt - curr_debt
