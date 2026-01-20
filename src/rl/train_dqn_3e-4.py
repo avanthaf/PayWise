@@ -25,7 +25,7 @@ def main():
     model = DQN(
         policy="MlpPolicy",
         env=env,
-        learning_rate=1e-3,
+        learning_rate=3e-4,
         buffer_size=50_000,
         learning_starts=1_000,
         batch_size=64,
@@ -37,7 +37,7 @@ def main():
         exploration_fraction=0.2,
         exploration_final_eps=0.05,
         verbose=1,
-        tensorboard_log=str(LOG_DIR),
+        tensorboard_log="artifacts/rl_logs/hpo_lr_3e-4",
         device="auto",
     )
 
