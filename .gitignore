@@ -5,4 +5,8 @@ data/processed/
 reports/eda/
 reports/baselines/
 
-src\envs\__pycache__
+src/envs/__pycache__
+
+artifacts/
+
+src/rl/__pycache__
