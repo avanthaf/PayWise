@@ -60,10 +60,14 @@ def run_rl(env: DebtEnv, model: DQN):
     done = False
 
     total_reward = 0.0
+
     steps = 0
+    done = False
 
     while not done:
         action, _ = model.predict(obs, deterministic=True)
+        action = int(action.item())
+
         obs, reward, terminated, truncated, _ = env.step(action)
 
         total_reward += reward
