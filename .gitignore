@@ -6,7 +6,7 @@ reports/eda/
 reports/baselines/
 
 src/envs/__pycache__
+src/rl/__pycache__
+src/evaluation/__pycache__
 
 artifacts/
-
-src/rl/__pycache__
