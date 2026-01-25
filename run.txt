@@ -3,12 +3,11 @@ venv\Scripts\activate
 activate venv
 
 pip install --upgrade pip
-pip install -r requirements.txt\
+pip install -r requirements.txt
 
-python src/data_preprocessing.py
-python src/data_loading.py
-python src/data_outliers.py
-python src/data_encoding.py
+python -m src/data_preprocessing.py
+python -m src/data_outliers.py
+python -m src.data_encoding
 python src/data_model_ready.py
 python src/data_merge_validate.py
 

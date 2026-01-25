@@ -5,17 +5,16 @@ ROOT_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT_DIR))
 
 from src.data_loading import (
-    load_lending_club,
-    load_finance_dataset,
-    load_tracker_dataset,
-    load_synthetic_dataset,
+    load_lendingclub_clean,
+    load_finance_clean,
+    load_tracker_clean,
+    load_synthetic_clean,
 )
 
 import pandas as pd
 import numpy as np
 
 PROC = Path("data/processed")
-
 
 # Selecting only the columns with numbers
 def get_numeric_columns(df):
@@ -96,10 +95,10 @@ def process_dataset(load_fn, name):
 
 
 def run_all():
-    process_dataset(load_lending_club, "lendingclub")
-    process_dataset(load_finance_dataset, "finance_dataset")
-    process_dataset(load_tracker_dataset, "tracker_dataset")
-    process_dataset(load_synthetic_dataset, "synthetic_finance")
+    process_dataset(load_lendingclub_clean, "lendingclub")
+    process_dataset(load_finance_clean, "finance_dataset")
+    process_dataset(load_tracker_clean, "tracker_dataset")
+    process_dataset(load_synthetic_clean, "synthetic_finance")
 
     print("\nAll outlier-handled datasets created successfully.")
 

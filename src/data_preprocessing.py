@@ -15,10 +15,9 @@ def standardize_columns(df):  # Standardizing all the column names
     )
     return df
 
+
 # DATASET 1: Lending Club
 # ------------------------
-
-
 def preprocess_lending_club():
     infile = RAW / "lending_club_loan_data.csv"
     outfile = PROCESSED / "lendingclub_clean.parquet"
@@ -40,10 +39,9 @@ def preprocess_lending_club():
     print("Processed", outfile)
     return df
 
+
 # DATASET 2: finance_dataset_for_fintech_applications
 # ------------------------
-
-
 def preprocess_finance_dataset():
     infile = RAW / "finance_dataset_for_fintech_applications.csv"
     outfile = PROCESSED / "finance_dataset_clean.parquet"
@@ -65,10 +63,9 @@ def preprocess_finance_dataset():
     print("Processed", outfile)
     return df
 
+
 # DATASET 3: personal_finance_tracker_dataset
 # ------------------------
-
-
 def preprocess_tracker_dataset():
     infile = RAW / "personal_finance_tracker_dataset.csv"
     outfile = PROCESSED / "tracker_dataset_clean.parquet"
@@ -96,10 +93,9 @@ def preprocess_tracker_dataset():
     print("Processed", outfile)
     return df
 
+
 # DATASET 4: synthetic_personal_finance_dataset
 # ------------------------
-
-
 def preprocess_synthetic_dataset():
     infile = RAW / "synthetic_personal_finance_dataset.csv"
     outfile = PROCESSED / "synthetic_finance_clean.parquet"
