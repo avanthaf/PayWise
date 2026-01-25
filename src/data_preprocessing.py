@@ -2,10 +2,11 @@ import pandas as pd
 from pathlib import Path
 
 RAW = Path("data/raw")
-PROC = Path("data/processed")
-PROC.mkdir(parents=True, exist_ok=True)
+PROCESSED = Path("data/processed")
+PROCESSED.mkdir(parents=True, exist_ok=True)
 
-def standardize_columns(df):
+
+def standardize_columns(df):  # Standardizing all the column names
     df.columns = (
         df.columns.str.strip()
         .str.lower()
@@ -14,103 +15,118 @@ def standardize_columns(df):
     )
     return df
 
-
 # DATASET 1: Lending Club
 # ------------------------
+
+
 def preprocess_lending_club():
     infile = RAW / "lending_club_loan_data.csv"
-    outfile = PROC / "lendingclub_clean.parquet"
+    outfile = PROCESSED / "lendingclub_clean.parquet"
 
     print(f"Loading dataset - {infile}")
     df = pd.read_csv(infile, low_memory=False)
     df = standardize_columns(df)
 
-    if "int_rate" in df.columns:
-        df["int_rate"] = df["int_rate"].astype(str).str.replace("%", "")
-        df["int_rate"] = pd.to_numeric(df["int_rate"], errors="coerce")
+    # Required columns
+    df = df[[
+        "loan_amnt",
+        "int_rate",
+        "installment",
+    ]]
 
-    if "term" in df.columns:
-        df["term"] = (
-            df["term"].astype(str)
-            .str.extract(r"(\d+)")
-            .astype(float)
-        )
+    df = df.drop_duplicates()  # Removing duplicate entries
 
-    df = df.drop_duplicates()
-
-    print(f"Saving cleaned {infile}")
     df.to_parquet(outfile, index=False)
-
     print("Processed", outfile)
     return df
-
 
 # DATASET 2: finance_dataset_for_fintech_applications
 # ------------------------
+
+
 def preprocess_finance_dataset():
     infile = RAW / "finance_dataset_for_fintech_applications.csv"
-    outfile = PROC / "finance_dataset_clean.parquet"
+    outfile = PROCESSED / "finance_dataset_clean.parquet"
 
     print(f"Loading dataset - {infile}")
     df = pd.read_csv(infile)
     df = standardize_columns(df)
 
-    if "loan_type" in df.columns:
-        df["loan_type"] = df["loan_type"].fillna("none")
+    # Required columns
+    df = df[[
+        "customer_profile_customer_id",
+        "account_activity_deposits",
+        "account_activity_withdrawals"
+    ]]
 
-    df = df.drop_duplicates()
+    df = df.drop_duplicates()  # Removing duplicate entries
 
-    print(f"Saving cleaned {infile}")
     df.to_parquet(outfile, index=False)
-
     print("Processed", outfile)
     return df
-
 
 # DATASET 3: personal_finance_tracker_dataset
 # ------------------------
+
+
 def preprocess_tracker_dataset():
     infile = RAW / "personal_finance_tracker_dataset.csv"
-    outfile = PROC / "tracker_dataset_clean.parquet"
+    outfile = PROCESSED / "tracker_dataset_clean.parquet"
 
     print(f"Loading dataset - {infile}")
     df = pd.read_csv(infile)
+    # Standardizing the column names of the dataset
     df = standardize_columns(df)
 
-    if "date" in df.columns:
-        df["date"] = pd.to_datetime(df["date"], errors="coerce")
+    # Required columns
+    df = df[[
+        "user_id",
+        "date",
+        "monthly_income",
+        "monthly_expense_total",
+        "loan_payment",
+    ]]
 
-    df = df.sort_values(by=["user_id", "date"], na_position="last")
+    # Converting the dates and time column
+    df["date"] = pd.to_datetime(df["date"], errors="coerce")
 
-    df = df.drop_duplicates()
+    df = df.drop_duplicates()  # Removing duplicate entries
 
-    print(f"Saving cleaned {infile}")
     df.to_parquet(outfile, index=False)
-
     print("Processed", outfile)
     return df
 
-
 # DATASET 4: synthetic_personal_finance_dataset
 # ------------------------
+
+
 def preprocess_synthetic_dataset():
     infile = RAW / "synthetic_personal_finance_dataset.csv"
-    outfile = PROC / "synthetic_finance_clean.parquet"
+    outfile = PROCESSED / "synthetic_finance_clean.parquet"
 
     print(f"Loading dataset - {infile}")
     df = pd.read_csv(infile)
+    # Standardizing the column names of the dataset
     df = standardize_columns(df)
 
-    df = df.fillna(df.median(numeric_only=True))
-    df = df.fillna("unknown")  
+    # Required columns
+    df = df[[
+        "user_id",
+        "record_date",
+        "monthly_income_usd",
+        "monthly_expenses_usd",
+        "monthly_emi_usd",
+    ]]
 
-    df = df.drop_duplicates()
+    # Converting the dates and time from string
+    df["record_date"] = pd.to_datetime(df["record_date"], errors="coerce")
 
-    print(f"Saving cleaned {infile}")
+    df = df.drop_duplicates()  # Removing duplicate entries
+
     df.to_parquet(outfile, index=False)
-
     print("Processed synthetic dataset →", outfile)
     return df
+
 
 def run_all():
     preprocess_lending_club()
@@ -118,6 +134,7 @@ def run_all():
     preprocess_tracker_dataset()
     preprocess_synthetic_dataset()
     print("\nAll datasets processed successfully!")
+
 
 if __name__ == "__main__":
     run_all()

@@ -1,0 +1,27 @@
+python -m venv venv
+venv\Scripts\activate
+activate venv
+
+pip install --upgrade pip
+pip install -r requirements.txt\
+
+python src/data_preprocessing.py
+python src/data_loading.py
+python src/data_outliers.py
+python src/data_encoding.py
+python src/data_model_ready.py
+python src/data_merge_validate.py
+
+python src/baselines/baseline_regression.py
+python src/baselines/record_baseline_metrics.py
+python src/baselines/visualize_baselines.py
+
+python src/rl/train_dqn_1e-4.py
+python src/rl/train_dqn_3e-4.py
+python src/rl/train_dqn_1e-3.py
+
+python src/rl/test_adaptation.py
+
+python src/rl/test_adaptation_best_lr.py
+
+python src/evaluation/benchmark_strategies.py
