@@ -1,7 +1,5 @@
 import sys
-import pandas as pd
 from pathlib import Path
-import numpy as np
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT_DIR))
@@ -13,11 +11,18 @@ from src.data_loading import (
     load_synthetic_dataset,
 )
 
+import pandas as pd
+import numpy as np
+
 PROC = Path("data/processed")
 
+
+# Selecting only the columns with numbers
 def get_numeric_columns(df):
     return df.select_dtypes(include="number").columns.tolist()
 
+
+# IQR
 def detect_iqr_outliers(series, factor=1.5):
     q1 = series.quantile(0.25)
     q3 = series.quantile(0.75)
@@ -28,16 +33,20 @@ def detect_iqr_outliers(series, factor=1.5):
 
     return (series < lower) | (series > upper), lower, upper
 
+
+# Z-score
 def detect_zscore_outliers(series, threshold=3.0):
     mean = series.mean()
-    std = series.std()
+    standard = series.std()
 
-    if std == 0 or pd.isna(std):
+    if standard == 0 or pd.isna(standard):
         return pd.Series(False, index=series.index)
 
-    z = (series - mean) / std
+    z = (series - mean) / standard
     return z.abs() > threshold
 
+
+# Handling the outliers
 def handle_outliers(df, dataset_name):
     df = df.copy()
     numeric_cols = get_numeric_columns(df)
@@ -72,6 +81,8 @@ def handle_outliers(df, dataset_name):
 
     return df
 
+
+# Processing outliers for all datasets
 def process_dataset(load_fn, name):
     print(f"Processing outliers for {name}...")
 
@@ -83,6 +94,7 @@ def process_dataset(load_fn, name):
 
     print(f"Saved outlier-handled dataset → {outfile}")
 
+
 def run_all():
     process_dataset(load_lending_club, "lendingclub")
     process_dataset(load_finance_dataset, "finance_dataset")
@@ -90,6 +102,7 @@ def run_all():
     process_dataset(load_synthetic_dataset, "synthetic_finance")
 
     print("\nAll outlier-handled datasets created successfully.")
+
 
 if __name__ == "__main__":
     run_all()
