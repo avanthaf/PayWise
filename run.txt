@@ -5,11 +5,11 @@ activate venv
 pip install --upgrade pip
 pip install -r requirements.txt
 
-python -m src/data_preprocessing.py
-python -m src/data_outliers.py
+python -m src.data_preprocessing
+python -m src.data_outliers
 python -m src.data_encoding
-python src/data_model_ready.py
-python src/data_merge_validate.py
+python -m src.data_model_ready
+python -m src.data_merge_validate
 
 python src/baselines/baseline_regression.py
 python src/baselines/record_baseline_metrics.py

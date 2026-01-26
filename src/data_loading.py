@@ -29,3 +29,17 @@ def load_tracker_outliers():
 
 def load_synthetic_outliers():
     return pd.read_parquet(PROC / "synthetic_finance_outliers_handled.parquet")
+
+
+# Datasets after encoding
+def load_lendingclub_final():
+    return pd.read_parquet(PROC / "lendingclub_final.parquet")
+
+def load_finance_final():
+    return pd.read_parquet(PROC / "finance_dataset_final.parquet")
+
+def load_tracker_final():
+    return pd.read_parquet(PROC / "tracker_dataset_final.parquet")
+
+def load_synthetic_final():
+    return pd.read_parquet(PROC / "synthetic_finance_final.parquet")
