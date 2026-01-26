@@ -43,3 +43,17 @@ def load_tracker_final():
 
 def load_synthetic_final():
     return pd.read_parquet(PROC / "synthetic_finance_final.parquet")
+
+
+# Datasets after doing the final model ready checks
+def load_lendingclub_model_ready():
+    return pd.read_parquet(PROC / "lendingclub_model_ready.parquet")
+
+def load_finance_model_ready():
+    return pd.read_parquet(PROC / "finance_dataset_model_ready.parquet")
+
+def load_tracker_model_ready():
+    return pd.read_parquet(PROC / "tracker_dataset_model_ready.parquet")
+
+def load_synthetic_model_ready():
+    return pd.read_parquet(PROC / "synthetic_finance_model_ready.parquet")
