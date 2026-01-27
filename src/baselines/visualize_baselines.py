@@ -14,7 +14,7 @@ def load_benchmarks():
 
 def plot_metric(df, metric, ylabel):
     plt.figure(figsize=(6, 4))
-    plt.bar(df["model"], df[metric])
+    plt.bar(df["Model"], df[metric])
     plt.ylabel(ylabel)
     plt.xlabel("Model")
     plt.title(f"Baseline Model Comparison ({metric})")
@@ -29,7 +29,7 @@ def plot_metric(df, metric, ylabel):
 
 def main():
     df = load_benchmarks()
-    df = df.sort_values("timestamp").groupby("model").tail(1)
+    df = df.sort_values("timestamp").groupby("Model").tail(1)
 
     plot_metric(df, "MAE", "Mean Absolute Error")
     plot_metric(df, "RMSE", "Root Mean Squared Error")
