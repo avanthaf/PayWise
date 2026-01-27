@@ -3,9 +3,12 @@ import pandas as pd
 from pathlib import Path
 
 from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+from sklearn.dummy import DummyRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from sklearn.metrics import mean_absolute_error, root_mean_squared_error, r2_score
 
 ROOT_DIR = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT_DIR))
@@ -15,26 +18,36 @@ REPORT_DIR = Path("reports/baselines")
 REPORT_DIR.mkdir(parents=True, exist_ok=True)
 
 TARGET = "debt_to_income_ratio"
-RANDOM_STATE = 42
+RANDOM_STATE = 50
+
+FEATURES = [
+    "monthly_income",
+    "monthly_expense_total",
+    "loan_payment",
+]
 
 
+# Load the dataset
 def load_data():
     df = pd.read_parquet(DATA_PATH)
-
-    assert TARGET in df.columns, f"{TARGET} not found in dataset"
-
-    X = df.drop(columns=[TARGET])
+    x = df[FEATURES]
     y = df[TARGET]
 
-    return X, y
-
-# Train baseline models
-# -------------------------------------------------
+    return x, y
 
 
 def train_models(X_train, y_train):
     models = {
-        "LinearRegression": LinearRegression(),
+        # Predicts the mean of the training targets
+        "MeanBaseline": DummyRegressor(strategy="mean"),
+
+        # Predicts using a linear regression model
+        "LinearRegression": Pipeline([
+            ("scaler", StandardScaler()),
+            ("model", LinearRegression())
+        ]),
+
+        # Predicts using a random forest regressor
         "RandomForest": RandomForestRegressor(
             n_estimators=100,
             random_state=RANDOM_STATE,
@@ -42,6 +55,7 @@ def train_models(X_train, y_train):
         ),
     }
 
+    # Train each model
     trained = {}
     for name, model in models.items():
         model.fit(X_train, y_train)
@@ -49,58 +63,57 @@ def train_models(X_train, y_train):
 
     return trained
 
-# Evaluate models
-# -------------------------------------------------
 
-
+# Evaluate models and print metrics
 def evaluate_models(models, X_test, y_test):
     results = []
 
     for name, model in models.items():
-        preds = model.predict(X_test)
+        predictions = model.predict(X_test)
 
-        mae = mean_absolute_error(y_test, preds)
-        mse = mean_squared_error(y_test, preds)
-        rmse = mse ** 0.5
-
-        r2 = r2_score(y_test, preds)
+        # Calculate metrics
+        mae = mean_absolute_error(y_test, predictions)
+        rmse = root_mean_squared_error(y_test, predictions)
+        r2 = r2_score(y_test, predictions)
 
         results.append({
-            "model": name,
+            "Model": name,
             "MAE": mae,
             "RMSE": rmse,
-            "R2": r2
+            "R2": r2,
         })
 
-        print(f"{name} | MAE={mae:.4f}, RMSE={rmse:.4f}, R2={r2:.4f}")
+        print(
+            f"{name:16s} | "
+            f"MAE={mae:.4f} | "
+            f"RMSE={rmse:.4f} | "
+            f"R2={r2:.4f}"
+        )
 
     return pd.DataFrame(results)
 
-# Main
-# -------------------------------------------------
-
 
 def main():
-    print("Loading unified financial state...")
     X, y = load_data()
 
-    print("Splitting train/test data...")
+    # Split the data into training and testing sets
     X_train, X_test, y_train, y_test = train_test_split(
-        X, y,
-        test_size=0.2,
+        X,
+        y,
+        test_size=0.2,  # 80/20 split
         random_state=RANDOM_STATE
     )
 
-    print("Training baseline models...")
+    # Train baseline models
     models = train_models(X_train, y_train)
 
-    print("Evaluating baseline models...")
+    # Evaluate models
     results = evaluate_models(models, X_test, y_test)
 
     outpath = REPORT_DIR / "baseline_regression_metrics.csv"
     results.to_csv(outpath, index=False)
 
-    print(f"\n Baseline metrics saved → {outpath}")
+    print(f"\nBaseline metrics saved → {outpath}")
 
 
 if __name__ == "__main__":

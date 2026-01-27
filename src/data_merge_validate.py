@@ -1,3 +1,7 @@
+from src.data_loading import (
+    load_tracker_model_ready,
+    load_lendingclub_model_ready,
+)
 import sys
 import pandas as pd
 from pathlib import Path
@@ -10,17 +14,13 @@ PROC = Path("data/processed")
 USER_COL = "user_id"
 TIME_COL = "date_freq"
 
-from src.data_loading import (
-    load_tracker_model_ready,
-    load_lendingclub_model_ready,
-)
 
 # Loading the datasets
 def load_model_ready(name: str) -> pd.DataFrame:
     return pd.read_parquet(PROC / f"{name}_model_ready.parquet")
 
 
-# Extracting from the lending club dataset 
+# Extracting from the lending club dataset
 def extract_lendingclub(lc_df: pd.DataFrame) -> dict:
     priors = {}
 
@@ -35,6 +35,7 @@ def extract_lendingclub(lc_df: pd.DataFrame) -> dict:
 
     return priors
 
+
 # Aggregating the personal finance tracker dataset
 def aggregate_personal_tracker(df: pd.DataFrame) -> pd.DataFrame:
     return (
@@ -46,6 +47,22 @@ def aggregate_personal_tracker(df: pd.DataFrame) -> pd.DataFrame:
             "loan_payment": "sum",
         })
     )
+
+
+# Computing Debt-to-Income Ratio (DTI)
+def debt_to_income_ratio(df: pd.DataFrame) -> pd.DataFrame:
+    df = df.copy()
+
+    df["debt_to_income_ratio"] = (
+        df["loan_payment"] / df["monthly_income"].clip(lower=1.0)
+    )
+
+    df["debt_to_income_ratio"] = (
+        df["debt_to_income_ratio"]
+        .clip(lower=0.0, upper=5.0)
+    )
+
+    return df
 
 
 # Validation
@@ -79,6 +96,7 @@ def run() -> None:
 
     # Personal Finance Tracker
     tracker = aggregate_personal_tracker(tracker)
+    tracker = debt_to_income_ratio(tracker)
     tracker = tracker.sort_values([USER_COL, TIME_COL]).reset_index(drop=True)
     validate(tracker)
 
@@ -87,6 +105,7 @@ def run() -> None:
     tracker.to_parquet(outfile, index=False)
 
     print(f"\nUnified financial state saved → {outfile}")
+
 
 if __name__ == "__main__":
     run()
