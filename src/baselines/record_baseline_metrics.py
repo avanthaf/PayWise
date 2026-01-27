@@ -8,7 +8,7 @@ BENCHMARK_PATH = Path("reports/baselines/baseline_benchmark.csv")
 TASK_TYPE = "regression"
 TARGET = "debt_to_income_ratio"
 DATASET = "unified_financial_state"
-RANDOM_SEED = 42
+RANDOM_SEED = 50
 
 
 def main():
