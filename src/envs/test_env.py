@@ -1,19 +1,18 @@
 from src.envs.debt_env import DebtEnv
 
-
 DATA_PATH = "data/processed/unified_financial_state.parquet"
 
 
-def run_basic_env_test():
-    print("\n=== Basic Environment Test ===")
+# Test to run the DebtEnv environment
+def run_env_test():
     env = DebtEnv(DATA_PATH)
 
-    obs, info = env.reset()
-    print("Initial observation:", obs)
+    observation, info = env.reset()
+    print("Initial observation:", observation)
 
     for step in range(5):
         action = env.action_space.sample()
-        obs, reward, terminated, truncated, info = env.step(action)
+        observation, reward, terminated, truncated, info = env.step(action)
 
         print(
             f"Step {step} | "
@@ -29,13 +28,12 @@ def run_basic_env_test():
     env.close()
 
 
+# Test to run the DebtEnv environment with parameterized task configuration
 def run_task_parameterized_test():
-    print("\n=== Task-Parameterized Environment Test ===")
-
     task_config = {
-        "income_scale": 0.7,          # recession-like
-        "expense_scale": 1.3,         # high expenses
-        "interest_multiplier": 1.5,   # high interest
+        "income_scale": 0.7,
+        "expense_scale": 1.3,
+        "interest_multiplier": 1.5,
         "stress_weight": 1.2,
     }
 
@@ -44,13 +42,13 @@ def run_task_parameterized_test():
         task_config=task_config,
     )
 
-    obs, info = env.reset()
-    print("Initial observation (task):", obs)
+    observation, info = env.reset()
+    print("Initial observation (task):", observation)
     print("Task config:", task_config)
 
     for step in range(5):
         action = env.action_space.sample()
-        obs, reward, terminated, truncated, info = env.step(action)
+        observation, reward, terminated, truncated, info = env.step(action)
 
         print(
             f"Step {step} | "
@@ -67,5 +65,5 @@ def run_task_parameterized_test():
 
 
 if __name__ == "__main__":
-    run_basic_env_test()
+    run_env_test()
     run_task_parameterized_test()
