@@ -1,7 +1,6 @@
 numpy
 pandas
 jupyter
-pyarrow
 ipykernel
 matplotlib
 seaborn
