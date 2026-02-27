@@ -1,34 +1,34 @@
-type Props = {
-  setScreen: (screen: string) => void
-}
+import { Link } from "react-router-dom";
 
-function Login({ setScreen }: Props) {
+const LoginPage = () => {
   return (
-    <>
-      <div className="app-title">PayWise</div>
+    <div className="page">
+      <div className="page-line" />
 
-      <div className="login-card">
-        <div className="login-title">LOGIN</div>
+      <div className="page-content">
+        <div className="app-title">PAYWISE</div>
 
-        <label>EMAIL ADDRESS:</label>
-        <input type="email" placeholder="[email@example.com]" />
+        <div className="login-card">
+          <div className="login-title">Login</div>
 
-        <label>PASSWORD:</label>
-        <input type="password" placeholder="[••••••••]" />
+          <label>Email</label>
+          <input type="email" placeholder="Enter your email" />
 
-        <button onClick={() => setScreen("dashboard")}>
-          LOGIN
-        </button>
+          <label>Password</label>
+          <input type="password" placeholder="Enter your password" />
 
-        <div className="login-footer">
-          Don&apos;t have an account?{" "}
-          <span onClick={() => setScreen("register")}>
-            CREATE ACCOUNT
-          </span>
+          <button>Login</button>
+
+          <div className="login-footer">
+            Don't have an account?{" "}
+            <Link to="/register">Create Account</Link>
+          </div>
         </div>
       </div>
-    </>
-  )
-}
 
-export default Login
+      <div className="page-line" />
+    </div>
+  );
+};
+
+export default LoginPage;

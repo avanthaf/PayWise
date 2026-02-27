@@ -1,14 +1,14 @@
-import { useState } from "react"
-import Login from "./pages/LoginPage"
-import PageLayout from "./components/PageLayout"
-import "./styles/global.css"
+import { Routes, Route } from "react-router-dom";
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
 
-export default function App() {
-  const [screen, setScreen] = useState("login")
-
+function App() {
   return (
-    <PageLayout>
-      {screen === "login" && <Login setScreen={setScreen} />}
-    </PageLayout>
-  )
+    <Routes>
+      <Route path="/" element={<LoginPage />} />
+      <Route path="/register" element={<RegisterPage />} />
+    </Routes>
+  );
 }
+
+export default App;
