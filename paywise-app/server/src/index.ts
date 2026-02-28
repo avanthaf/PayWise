@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import cors from "cors";
 import authRoutes from "./routes/auth";
+import loginRoutes from "./routes/login";
 
 dotenv.config();
 
@@ -18,6 +19,7 @@ app.use(
 
 app.use(express.json());
 app.use("/api/auth", authRoutes);
+app.use("/api", loginRoutes);
 
 mongoose.connect(process.env.MONGO_URI as string, {
   family: 4,

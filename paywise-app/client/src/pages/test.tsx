@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -8,7 +8,7 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  const handleLogin = async (e: React.SyntheticEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
@@ -20,35 +20,26 @@ export default function LoginPage() {
         body: JSON.stringify({ email, password }),
       });
 
-      let data;
-
-      try {
-        data = await response.json();
-      } catch {
-        data = {};
-      }
+      const data = await response.json();
 
       if (response.ok) {
+        // ✅ Login successful → redirect
         navigate("/input");
       } else {
         setError(data.message || "Invalid credentials");
       }
-    } catch {
+    } catch (err) {
       setError("Server error");
     }
   };
 
   return (
     <div className="page">
-      <div className="page-line" />
-
       <div className="page-content">
-        <div className="app-title">PAYWISE</div>
-
         <div className="login-card">
           <div className="login-title">Login</div>
 
-            <form onSubmit={handleLogin}>
+          <form onSubmit={handleLogin}>
             <label>Email</label>
             <input
               type="email"
@@ -69,15 +60,8 @@ export default function LoginPage() {
           </form>
 
           {error && <p style={{ color: "red" }}>{error}</p>}
-
-          <div className="login-footer">
-            Don't have an account?{" "}
-            <Link to="/register">Create Account</Link>
-          </div>
         </div>
       </div>
-
-      <div className="page-line" />
     </div>
   );
-};
+}

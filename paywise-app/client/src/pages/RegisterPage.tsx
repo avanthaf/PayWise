@@ -80,33 +80,33 @@ const RegisterPage = () => {
         <div className="login-card">
           <div className="login-title">Create Account</div>
 
+          <form onSubmit={handleRegister}>
           <label>Name</label>
           <input
             type="text"
-            placeholder="Enter your name"
             value={name}
             onChange={(e) => setName(e.target.value)}
+            required
           />
 
           <label>Email</label>
           <input
             type="email"
-            placeholder="Enter your email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            required
           />
 
           <label>Password</label>
           <input
             type="password"
-            placeholder="Enter your password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
+            required
           />
 
-          <button onClick={handleRegister} disabled={loading}>
-            {loading ? "Registering..." : "Register"}
-          </button>
+          <button type="submit">REGISTER</button>
+        </form>
 
           <div className="login-footer">
             Already have an account?{" "}

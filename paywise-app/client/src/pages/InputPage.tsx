@@ -1,15 +1,8 @@
-/**
- * WIREFRAME - Financial Data Input Screen
- * Conceptual mockup for academic purposes
- */
-
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-export function WireframeInput({
-  onNavigate,
-}: {
-  onNavigate: (screen: string) => void;
-}) {
+export default function InputPage() {
+  const navigate = useNavigate();
   const [income, setIncome] = useState("");
   const [expenses, setExpenses] = useState<
     Array<{ label: string; amount: string }>
@@ -357,13 +350,13 @@ export function WireframeInput({
         {/* Action Buttons */}
         <div className="flex gap-4 pt-4">
           <button
-            onClick={() => onNavigate("dashboard")}
+            onClick={() => navigate("/dashboard")}
             className="flex-1 border-2 border-black bg-black text-white p-4 hover:bg-gray-800 transition-colors"
           >
             <div className="font-mono">SAVE</div>
           </button>
           <button
-            onClick={() => onNavigate("dashboard")}
+            onClick={() => navigate("/dashboard")}
             className="flex-1 border-2 border-gray-400 bg-white p-4 hover:bg-gray-100 transition-colors"
           >
             <div className="font-mono text-gray-600">
