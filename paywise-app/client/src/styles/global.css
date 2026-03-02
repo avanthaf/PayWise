@@ -165,3 +165,11 @@ button:disabled {
     padding: 1rem;
   }
 }
+
+.welcome-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}

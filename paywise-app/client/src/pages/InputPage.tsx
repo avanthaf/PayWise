@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import PageLayout from "../components/PageLayout";
+import { useNavigate } from "react-router-dom";
 
 interface Expense {
   label: string;
@@ -21,6 +22,15 @@ export default function InputPage() {
   const [loans, setLoans] = useState<Loan[]>([]);
   const [loanLabel, setLoanLabel] = useState("");
   const [loanAmount, setLoanAmount] = useState<number | "">("");
+
+  const navigate = useNavigate();
+  const userName = localStorage.getItem("userName");
+
+  useEffect(() => {
+  if (!localStorage.getItem("userName")) {
+    navigate("/login");
+  }
+}, [navigate]);
 
   const addExpense = () => {
     if (!expenseLabel || !expenseAmount) return;
@@ -68,11 +78,21 @@ export default function InputPage() {
     income !== ""
       ? Number(income) - totalExpenses - totalLoans
       : 0;
+  
+  const handleLogout = () => {
+    localStorage.removeItem("userName");
+    navigate("/login");
+  };
 
   return (
     <PageLayout>
       <div className="page-content">
-
+        <div className="card welcome-banner" style={{ marginBottom: "16px" }}>
+        <span>Welcome back, <strong>{userName || "User"}</strong></span>
+        <button onClick={handleLogout} style={{ width: "fit-content", padding: "6px 16px" }}>
+          LOGOUT
+        </button>
+      </div>
         <div className="app-title">
           FINANCIAL DATA
         </div>

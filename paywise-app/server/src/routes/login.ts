@@ -33,7 +33,7 @@ router.post("/login", async (req, res) => {
       sameSite: "strict",
     });
 
-    res.status(200).json({ message: "Login successful" });
+    res.status(200).json({ message: "Login successful", name: user.name });
 
   } catch (error) {
     res.status(500).json({ message: "Server error" });

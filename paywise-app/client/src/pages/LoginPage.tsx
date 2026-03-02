@@ -29,6 +29,7 @@ export default function LoginPage() {
       }
 
       if (response.ok) {
+         localStorage.setItem("userName", data.name);
         navigate("/input");
       } else {
         setError(data.message || "Invalid credentials");
