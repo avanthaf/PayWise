@@ -1,5 +1,6 @@
 import express from "express";
 import User from "../models/User";
+import bcrypt from "bcrypt";
 
 const router = express.Router();
 
@@ -21,10 +22,12 @@ router.post("/register", async (req, res) => {
       });
     }
 
+    const hashedPassword = await bcrypt.hash(password, 10);
+
     const newUser = new User({
       name,
       email,
-      password,
+      password: hashedPassword,
     });
 
     await newUser.save();

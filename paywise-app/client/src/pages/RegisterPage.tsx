@@ -12,42 +12,34 @@ const RegisterPage = () => {
   const [success, setSuccess] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleRegister = async () => {
+  const handleRegister = async (e: React.SyntheticEvent) => {e.preventDefault();
+
     setError("");
     setSuccess("");
-
-    if (!name || !email || !password) {
-      setError("All fields are required.");
-      return;
-    }
+    setLoading(true);
 
     try {
-      setLoading(true);
-
       const response = await fetch("http://localhost:5000/api/auth/register", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ name, email, password }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.message || "Registration failed.");
-        setLoading(false);
+        setError(data.message);
         return;
       }
 
-      setSuccess(data.message || "Account created successfully!");
+      setSuccess(data.message);
 
       setTimeout(() => {
-        navigate("/");
-      }, 1500);
+        navigate("/login");
+      }, 2000);
 
     } catch {
-      setError("Server is not responding. Please try again.");
+      setError("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -60,23 +52,9 @@ const RegisterPage = () => {
       <div className="page-content">
         <div className="app-title">PAYWISE</div>
 
-        {success && (
-          <div className="alert-wrapper">
-            <div className="custom-alert success">
-              {success}
-            </div>
-          </div>
-                )}
-        
-        {error && (
-          <div className="alert-wrapper">
-            <div className="custom-alert error">
-              {error}
-            </div>
-          </div>
-        )}
+        {error && <div className="custom-alert error">{error}</div>}
+        {success && <div className="custom-alert success">{success}</div>}
 
-     
         <div className="login-card">
           <div className="login-title">Create Account</div>
 
@@ -105,7 +83,9 @@ const RegisterPage = () => {
             required
           />
 
-          <button type="submit">REGISTER</button>
+          <button type="submit" disabled={loading}>
+            {loading ? "REGISTERING..." : "REGISTER"}
+          </button>
         </form>
 
           <div className="login-footer">
