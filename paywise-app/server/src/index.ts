@@ -5,6 +5,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import authRoutes from "./routes/register";
 import loginRoutes from "./routes/login";
+import financeRoutes from "./routes/finance";
 
 dotenv.config();
 
@@ -22,6 +23,7 @@ app.use(express.json());
 app.use(cookieParser());
 app.use("/api/auth", authRoutes);
 app.use("/api", loginRoutes);
+app.use("/api/finance", financeRoutes);
 
 mongoose.connect(process.env.MONGO_URI as string, {
   family: 4,
