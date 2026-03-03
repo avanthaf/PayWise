@@ -1,0 +1,175 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+  width: 100%;
+  background: #ffffff;
+  color: #000000;
+  font-family: monospace;
+}
+
+.page {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-line {
+  width: 100%;
+  border-top: 4px solid #000;
+  margin: 24px 0;
+}
+.page-content {
+  width: 100%;
+  max-width: 1000px;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 0 40px;
+  margin: 0 auto;
+}
+
+.app-title {
+  width: 100%;
+  padding: 1.5rem;
+  text-align: center;
+  margin-bottom: 2.5rem;
+
+  font-size: clamp(1.6rem, 3vw, 2rem);
+  font-weight: bold;
+  letter-spacing: 0.2rem;
+}
+
+.card {
+  width: 100%;
+  padding: 32px;
+  border: 2px solid #000;
+}
+
+.card-title {
+  font-weight: bold;
+  border-bottom: 2px solid #000;
+  padding-bottom: 10px;
+  margin-bottom: 20px;
+}
+
+.login-card input {
+  margin-bottom: 1.25rem;
+}
+
+.login-card button {
+  margin-top: 0.75rem;
+}
+
+.login-title {
+  font-size: clamp(1.4rem, 2.5vw, 1.8rem);
+  font-weight: bold;
+  margin-bottom: 1.5rem;
+}
+
+label {
+  display: block;
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  margin-top: 1rem;
+}
+
+input {
+  width: 100%;
+  padding: 0.8rem;
+  border: 2px solid #9ca3af;
+  font-family: monospace;
+  font-size: 1rem;
+  margin-bottom: 1rem;
+}
+
+input:focus {
+  outline: none;
+  border-color: #000;
+}
+
+button {
+  width: 100%;
+  padding: 1rem;
+  border: 2px solid #000;
+  background: #fff;
+  font-family: monospace;
+
+  font-size: 1.3rem;
+  font-weight: bold;
+  letter-spacing: 0.08rem;
+
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+button:hover {
+  background: #f0f0f0;
+}
+
+button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.login-footer {
+  margin-top: 1.5rem;
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.login-footer a {
+  font-size: 1rem;
+  font-weight: bold;
+}
+
+.alert-wrapper {
+  width: 100%;
+  max-width: 28rem;
+  margin-bottom: 1.5rem;
+}
+
+.custom-alert {
+  border: 2px solid #000;
+  padding: 1rem;
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+.custom-alert.success {
+  background-color: #d4edda;
+}
+
+.custom-alert.error {
+  background-color: #f8d7da;
+}
+
+@media (max-width: 480px) {
+  .login-card {
+    padding: 1.5rem;
+  }
+
+  .app-title {
+    padding: 1rem;
+  }
+}
+
+.welcome-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
