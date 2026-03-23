@@ -9,5 +9,6 @@ src/__pycache__
 src/envs/__pycache__
 src/rl/__pycache__
 src/evaluation/__pycache__
+src/training_dqn/__pycache__
 
 artifacts/
