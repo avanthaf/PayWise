@@ -9,11 +9,16 @@ interface FinanceSummary {
   goals: { preferredStrategy: string; extraMonthly: number };
   savedAt: string;
 }
+interface StrategySlice {
+  monthsToPayoff: number; payoffDate: string; totalInterestPaid: number;
+}
 interface StrategySummary {
-  recommended: "avalanche" | "snowball";
+  recommended: "avalanche" | "snowball" | "dqn_rl";
   monthlyBudget: number;
-  avalanche: { monthsToPayoff: number; payoffDate: string; totalInterestPaid: number };
-  snowball:  { monthsToPayoff: number; payoffDate: string; totalInterestPaid: number };
+  mlServiceAvailable: boolean;
+  avalanche: StrategySlice;
+  snowball:  StrategySlice;
+  dqn_rl:    StrategySlice | null;
 }
 type LoadState = "loading" | "ready" | "no-data" | "error";
 
@@ -49,7 +54,7 @@ function NavCard({ title, description, meta, badge, path, disabled, inverted, on
   return (
     <div
       onClick={() => !disabled && onClick(path)}
-      className={`strategy-card${inverted ? "" : ""}`}
+      className="strategy-card"
       style={{
         border: "2px solid #000", padding: "20px",
         cursor: disabled ? "not-allowed" : "pointer",
@@ -57,21 +62,18 @@ function NavCard({ title, description, meta, badge, path, disabled, inverted, on
         background: inverted ? "#000" : "#fff",
         color: inverted ? "#fff" : "#000",
         display: "flex", flexDirection: "column", gap: "6px",
-        transition: "background 0.15s ease",
-        position: "relative",
+        transition: "background 0.15s ease", position: "relative",
       }}
       onMouseEnter={(e) => { if (!disabled) (e.currentTarget as HTMLDivElement).style.background = inverted ? "#222" : "#f5f5f5"; }}
       onMouseLeave={(e) => { (e.currentTarget as HTMLDivElement).style.background = inverted ? "#000" : "#fff"; }}
     >
-      {badge && <div className="badge"
-        style={{ background: inverted ? "#fff" : "#000", color: inverted ? "#000" : "#fff" }}>{badge}</div>}
+      {badge && <div className="badge" style={{ background: inverted ? "#fff" : "#000", color: inverted ? "#000" : "#fff" }}>{badge}</div>}
       <div style={{ fontWeight: "bold", fontSize: "1rem", letterSpacing: "0.05rem" }}>{title}</div>
       <div className="text-hint" style={{ opacity: 0.7, lineHeight: 1.5, color: inverted ? "rgba(255,255,255,0.7)" : undefined }}>
         {description}
       </div>
       {meta && (
-        <div style={{ marginTop: "8px", fontSize: "0.78rem", fontWeight: "bold",
-          borderTop: `1px solid ${inverted ? "#444" : "#e0e0e0"}`, paddingTop: "8px" }}>
+        <div style={{ marginTop: "8px", fontSize: "0.78rem", fontWeight: "bold", borderTop: `1px solid ${inverted ? "#444" : "#e0e0e0"}`, paddingTop: "8px" }}>
           {meta}
         </div>
       )}
@@ -80,12 +82,23 @@ function NavCard({ title, description, meta, badge, path, disabled, inverted, on
   );
 }
 
-export default function DashboardPage() {
-  const navigate = useNavigate();
-  const userName = localStorage.getItem("userName");
+function recLabel(rec: string) {
+  if (rec === "dqn_rl")   return "DQN AGENT";
+  if (rec === "avalanche") return "AVALANCHE METHOD";
+  return "SNOWBALL METHOD";
+}
+function recSubtitle(rec: string) {
+  if (rec === "dqn_rl")   return "DQN policy";
+  if (rec === "avalanche") return "Highest interest rate first — minimises total interest paid";
+  return "Smallest balance first — builds momentum with quick wins";
+}
 
-  const [finance, setFinance]   = useState<FinanceSummary | null>(null);
-  const [strategy, setStrategy] = useState<StrategySummary | null>(null);
+export default function DashboardPage() {
+  const navigate  = useNavigate();
+  const userName  = localStorage.getItem("userName");
+
+  const [finance,   setFinance]   = useState<FinanceSummary | null>(null);
+  const [strategy,  setStrategy]  = useState<StrategySummary | null>(null);
   const [loadState, setLoadState] = useState<LoadState>("loading");
 
   const fetchAll = useCallback(async () => {
@@ -100,20 +113,26 @@ export default function DashboardPage() {
       if (!finRes.ok) throw new Error();
       const { data: finData } = await finRes.json();
       setFinance(finData);
-      if (stratRes.ok) { const stratData = await stratRes.json(); setStrategy(stratData); }
+      if (stratRes.ok) { const sd = await stratRes.json(); setStrategy(sd); }
       setLoadState("ready");
     } catch { setLoadState("error"); }
   }, [navigate, userName]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
-  const rec       = strategy?.recommended ?? "avalanche";
-  const recResult = strategy ? strategy[rec] : null;
-  const hasLoans  = (finance?.loans?.length ?? 0) > 0;
-  const debtToIncome = finance?.income ? pct(finance.totalLoans, finance.income) : null;
-  const avgRate = finance?.loans?.length
+  const rec = strategy?.recommended ?? "avalanche";
+
+  const recResult: StrategySlice | null = (() => {
+    if (!strategy) return null;
+    if (rec === "dqn_rl") return strategy.dqn_rl;
+    return strategy[rec];
+  })();
+
+  const hasLoans       = (finance?.loans?.length ?? 0) > 0;
+  const debtToIncome   = finance?.income ? pct(finance.totalLoans, finance.income) : null;
+  const avgRate        = finance?.loans?.length
     ? finance.loans.reduce((s, l) => s + l.interestRate, 0) / finance.loans.length : null;
-  const lastSaved = finance?.savedAt
+  const lastSaved      = finance?.savedAt
     ? new Date(finance.savedAt).toLocaleDateString("en-US", { day: "numeric", month: "short", year: "numeric" }) : null;
 
   if (loadState === "loading") return (
@@ -141,8 +160,7 @@ export default function DashboardPage() {
           You haven't entered any financial data yet. Start by adding your income,
           expenses, and loans to generate your personalised repayment plan.
         </p>
-        <button className="btn-primary" onClick={() => navigate("/input")}
-          style={{ maxWidth: "320px", margin: "0 auto" }}>
+        <button className="btn-primary" onClick={() => navigate("/input")} style={{ maxWidth: "320px", margin: "0 auto" }}>
           GET STARTED →
         </button>
       </div>
@@ -152,10 +170,9 @@ export default function DashboardPage() {
   return (
     <PageLayout>
       <div className="page-content">
-
-
         <div className="app-title">DASHBOARD</div>
 
+        {/* Financial overview */}
         <div className="card">
           <div className="card-title">FINANCIAL OVERVIEW</div>
           <div className="grid-3">
@@ -177,32 +194,40 @@ export default function DashboardPage() {
           {debtToIncome !== null && debtToIncome > 40 && (
             <div className="warn-banner">
               ⚠ Your debt-to-income ratio is <strong>{debtToIncome}%</strong>. Financial advisors
-              generally recommend keeping this below 40%. Consider reducing discretionary expenses
-              or increasing your income to accelerate repayment.
+              generally recommend keeping this below 40%.
             </div>
           )}
         </div>
 
         {recResult && (
           <div style={{
-            border: "2px solid #000", padding: "16px 20px", background: "#000", color: "#fff",
+            border: rec === "dqn_rl" ? "2px solid #1a1a2e" : "2px solid #000",
+            padding: "16px 20px",
+            background: rec === "dqn_rl" ? "#1a1a2e" : "#000",
+            color: "#fff",
             display: "flex", justifyContent: "space-between", alignItems: "center",
             flexWrap: "wrap", gap: "12px",
           }}>
             <div>
-              <div className="text-hint" style={{ color: "rgba(255,255,255,0.6)", marginBottom: "4px" }}>RECOMMENDED STRATEGY</div>
-              <div style={{ fontSize: "1.2rem", fontWeight: "bold" }}>{rec.toUpperCase()} METHOD</div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "4px" }}>
+                <div className="text-hint" style={{ color: "rgba(255,255,255,0.6)" }}>RECOMMENDED STRATEGY</div>
+                {rec === "dqn_rl" && (
+                  <span style={{
+                    background: "#4a6cf7", color: "#fff", fontSize: "0.6rem",
+                    padding: "2px 6px", fontFamily: "monospace", letterSpacing: "0.05rem",
+                  }}>DQN</span>
+                )}
+              </div>
+              <div style={{ fontSize: "1.2rem", fontWeight: "bold" }}>{recLabel(rec)}</div>
               <div className="text-hint" style={{ color: "rgba(255,255,255,0.75)", marginTop: "4px" }}>
-                {rec === "avalanche"
-                  ? "Highest interest rate first — minimises total interest paid"
-                  : "Smallest balance first — builds momentum with quick wins"}
+                {recSubtitle(rec)}
               </div>
             </div>
             <div style={{ display: "flex", gap: "24px", flexWrap: "wrap" }}>
               {[
-                { label: "DEBT-FREE BY",    val: recResult.payoffDate },
-                { label: "TOTAL INTEREST",  val: `LKR ${fmt(recResult.totalInterestPaid)}` },
-                { label: "MONTHS LEFT",     val: String(recResult.monthsToPayoff) },
+                { label: "DEBT-FREE BY",   val: recResult.payoffDate },
+                { label: "TOTAL INTEREST", val: `LKR ${fmt(recResult.totalInterestPaid)}` },
+                { label: "MONTHS LEFT",    val: String(recResult.monthsToPayoff) },
               ].map(({ label, val }) => (
                 <div key={label} style={{ textAlign: "right" }}>
                   <div className="text-hint" style={{ color: "rgba(255,255,255,0.6)" }}>{label}</div>
@@ -210,6 +235,12 @@ export default function DashboardPage() {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {strategy && !strategy.mlServiceAvailable && hasLoans && (
+          <div className="info-banner">
+            💡 Start <code>ml_service.py</code> to also get a DQN repayment recommendation.
           </div>
         )}
 
@@ -244,8 +275,8 @@ export default function DashboardPage() {
               description="Update your income, expenses, loans, and repayment preferences."
               meta={lastSaved ? `Last saved: ${lastSaved}` : undefined} />
             <NavCard title="STRATEGY"    path="/strategy" onClick={navigate} disabled={!hasLoans}
-              description="Compare Avalanche vs Snowball and view your full payment schedule."
-              meta={recResult ? `${rec.toUpperCase()} recommended · ${recResult.monthsToPayoff} months` : undefined}
+              description="Compare Avalanche, Snowball and DQN strategies with full payment schedules."
+              meta={recResult ? `${recLabel(rec)} recommended · ${recResult.monthsToPayoff} months` : undefined}
               badge={recResult ? "PLAN READY" : undefined} />
             <NavCard title="PROGRESS"    path="/progress" onClick={navigate} disabled={!hasLoans}
               description="Track projected debt reduction over time with charts and milestones."

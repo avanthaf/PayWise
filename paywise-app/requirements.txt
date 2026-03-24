@@ -1,0 +1,13 @@
+numpy
+pandas
+jupyter
+ipykernel
+matplotlib
+seaborn
+scikit-learn
+joblib
+pyarrow
+torch
+stable-baselines3
+gymnasium
+flask

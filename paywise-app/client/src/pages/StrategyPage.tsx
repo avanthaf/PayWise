@@ -2,10 +2,36 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import PageLayout from "../components/PageLayout";
 
-interface MonthSnapshot { month: number; label: string; totalDebt: number; interestPaid: number; principalPaid: number; }
-interface StrategyResult { strategy: "avalanche" | "snowball"; monthlyPayment: number; totalInterestPaid: number; totalPaid: number; monthsToPayoff: number; payoffDate: string; explanation: string; schedule: MonthSnapshot[]; }
-interface StrategyResponse { recommended: "avalanche" | "snowball"; monthlyBudget: number; totalDebt: number; income: number; totalExpenses: number; availableMonthly: number; avalanche: StrategyResult; snowball: StrategyResult; }
+interface MonthSnapshot {
+  month: number; label: string; totalDebt: number;
+  interestPaid: number; principalPaid: number;
+}
+interface DQNMonthSnapshot extends MonthSnapshot {
+  action: number; actionLabel: string;
+}
+interface StrategyResult {
+  strategy: "avalanche" | "snowball";
+  monthlyPayment: number; totalInterestPaid: number; totalPaid: number;
+  monthsToPayoff: number; payoffDate: string; explanation: string;
+  schedule: MonthSnapshot[];
+}
+interface DQNResult {
+  strategy: "dqn_rl";
+  monthlyPayment: number; totalInterestPaid: number; totalPaid: number;
+  monthsToPayoff: number; payoffDate: string; explanation: string;
+  dominantAction: number; dominantActionLabel: string;
+  schedule: DQNMonthSnapshot[];
+}
+interface StrategyResponse {
+  recommended: "avalanche" | "snowball" | "dqn_rl";
+  monthlyBudget: number; totalDebt: number; income: number;
+  totalExpenses: number; availableMonthly: number;
+  avalanche: StrategyResult; snowball: StrategyResult;
+  dqn_rl: DQNResult | null;
+  mlServiceAvailable: boolean;
+}
 
+type SelectedStrategy = "avalanche" | "snowball" | "dqn_rl";
 const fmt = (n: number) => n.toLocaleString();
 
 function StatBox({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
@@ -17,16 +43,38 @@ function StatBox({ label, value, highlight }: { label: string; value: string; hi
   );
 }
 
-function StrategyCard({ result, isRecommended, isSelected, onSelect }: {
-  result: StrategyResult; isRecommended: boolean; isSelected: boolean; onSelect: () => void;
+function StrategyCard({ result, isRecommended, isSelected, onSelect, badge, accentColor }: {
+  result: StrategyResult | DQNResult; isRecommended: boolean; isSelected: boolean;
+  onSelect: () => void; badge?: string; accentColor?: string;
 }) {
-  const title = result.strategy === "avalanche" ? "AVALANCHE" : "SNOWBALL";
-  const subtitle = result.strategy === "avalanche" ? "Highest interest rate first" : "Smallest balance first";
+  const isDQN = result.strategy === "dqn_rl";
+  const title = isDQN ? "DQN AGENT" : result.strategy === "avalanche" ? "AVALANCHE" : "SNOWBALL";
+  const subtitle = isDQN
+    ? "Deep Q-Network reinforcement learning policy"
+    : result.strategy === "avalanche"
+      ? "Highest interest rate first"
+      : "Smallest balance first";
+
   return (
-    <div onClick={onSelect}
-      className={`strategy-card${isSelected ? " strategy-card--selected" : ""}`}>
+    <div
+      onClick={onSelect}
+      className={`strategy-card${isSelected ? " strategy-card--selected" : ""}`}
+      style={{ borderColor: isSelected ? (accentColor || "#000") : "#ccc" }}
+    >
       {isRecommended && <div className="badge">RECOMMENDED</div>}
-      <div style={{ fontWeight: "bold", fontSize: "1.1rem", marginBottom: "4px" }}>{title}</div>
+      {isDQN && (
+        <div style={{
+          position: "absolute", top: "-1px", left: "10px",
+          background: "#1a1a2e", color: "#fff",
+          fontSize: "0.62rem", padding: "2px 8px",
+          fontFamily: "monospace", letterSpacing: "0.05rem",
+        }}>
+          DQN
+        </div>
+      )}
+      <div style={{ fontWeight: "bold", fontSize: "1.1rem", marginBottom: "4px", marginTop: isDQN ? "8px" : "0" }}>
+        {title}
+      </div>
       <div className="text-muted" style={{ marginBottom: "16px" }}>{subtitle}</div>
       <div className="grid-2">
         <StatBox label="Payoff Date"         value={result.payoffDate} />
@@ -34,6 +82,15 @@ function StrategyCard({ result, isRecommended, isSelected, onSelect }: {
         <StatBox label="Total Interest Paid" value={`LKR ${fmt(result.totalInterestPaid)}`} />
         <StatBox label="Total Amount Paid"   value={`LKR ${fmt(result.totalPaid)}`} />
       </div>
+      {isDQN && (result as DQNResult).dominantActionLabel && (
+        <div style={{
+          marginTop: "12px", padding: "8px 12px", background: "#f0f4ff",
+          border: "1px solid #c8d4f0", fontSize: "0.8rem",
+        }}>
+          <span className="text-muted">Agent's dominant action: </span>
+          <strong>{(result as DQNResult).dominantActionLabel}</strong>
+        </div>
+      )}
     </div>
   );
 }
@@ -42,11 +99,11 @@ export default function StrategyPage() {
   const navigate = useNavigate();
   const userName = localStorage.getItem("userName");
 
-  const [data, setData]                   = useState<StrategyResponse | null>(null);
-  const [selected, setSelected]           = useState<"avalanche" | "snowball">("avalanche");
-  const [loading, setLoading]             = useState(true);
-  const [error, setError]                 = useState("");
-  const [showFullSchedule, setShowFull]   = useState(false);
+  const [data,     setData]     = useState<StrategyResponse | null>(null);
+  const [selected, setSelected] = useState<SelectedStrategy>("avalanche");
+  const [loading,  setLoading]  = useState(true);
+  const [error,    setError]    = useState("");
+  const [showFull, setShowFull] = useState(false);
 
   useEffect(() => {
     if (!userName) { navigate("/login"); return; }
@@ -61,9 +118,10 @@ export default function StrategyPage() {
       if (res.status === 400) { const b = await res.json(); setError(b.error || "Could not generate a strategy."); return; }
       if (!res.ok) throw new Error();
       const body: StrategyResponse = await res.json();
-      setData(body); setSelected(body.recommended);
+      setData(body);
+      setSelected(body.recommended);
     } catch { setError("Failed to load strategy. Make sure the server is running."); }
-    finally { setLoading(false); }
+    finally  { setLoading(false); }
   };
 
   if (loading) return (
@@ -83,87 +141,162 @@ export default function StrategyPage() {
     </div></PageLayout>
   );
 
-  const activeResult  = selected === "avalanche" ? data.avalanche : data.snowball;
-  const altResult     = selected === "avalanche" ? data.snowball   : data.avalanche;
-  const interestSaving = altResult.totalInterestPaid - activeResult.totalInterestPaid;
-  const monthDiff      = altResult.monthsToPayoff - activeResult.monthsToPayoff;
-  const scheduleToShow = showFullSchedule ? activeResult.schedule : activeResult.schedule.slice(0, 12);
+  const activeResult: StrategyResult | DQNResult =
+    selected === "dqn_rl" ? data.dqn_rl! : data[selected];
+
+  const schedule      = activeResult.schedule;
+  const scheduleToShow = showFull ? schedule : schedule.slice(0, 12);
+
+  const bestRuleBased =
+    data.avalanche.totalInterestPaid <= data.snowball.totalInterestPaid
+      ? data.avalanche : data.snowball;
+
+  const dqnVsRule = data.dqn_rl
+    ? bestRuleBased.totalInterestPaid - data.dqn_rl.totalInterestPaid
+    : null;
 
   return (
     <PageLayout>
       <div className="page-content">
-
-
         <div className="app-title">REPAYMENT STRATEGY</div>
 
+        {/* Financial snapshot */}
         <div className="card">
           <div className="card-title">YOUR FINANCIAL SNAPSHOT</div>
           <div className="grid-3">
-            <StatBox label="Monthly Income"          value={`LKR ${fmt(data.income)}`} />
-            <StatBox label="Monthly Expenses"        value={`LKR ${fmt(data.totalExpenses)}`} />
-            <StatBox label="Total Debt"              value={`LKR ${fmt(data.totalDebt)}`}              highlight />
-            <StatBox label="Monthly Budget for Debt" value={`LKR ${fmt(data.monthlyBudget)}`}          highlight />
+            <StatBox label="Monthly Income"           value={`LKR ${fmt(data.income)}`} />
+            <StatBox label="Monthly Expenses"         value={`LKR ${fmt(data.totalExpenses)}`} />
+            <StatBox label="Total Debt"               value={`LKR ${fmt(data.totalDebt)}`}          highlight />
+            <StatBox label="Monthly Budget for Debt"  value={`LKR ${fmt(data.monthlyBudget)}`}      highlight />
             <StatBox label="Available After Minimums" value={`LKR ${fmt(data.availableMonthly)}`} />
-            <StatBox label="Recommended Strategy"    value={data.recommended.toUpperCase()}            highlight />
+            <StatBox label="Recommended Strategy"     value={data.recommended === "dqn_rl" ? "DQN AGENT" : data.recommended.toUpperCase()} highlight />
           </div>
         </div>
 
-        {/* Strategy comparison */}
+        {!data.mlServiceAvailable && (
+          <div className="warn-banner">
+            DQN service is offline. Only rule-based strategies are available.
+            Start <code>ml_service.py</code> to enable the DQN Agent tab.
+          </div>
+        )}
+
+        {data.dqn_rl && dqnVsRule !== null && (
+          <div style={{
+            padding: "14px 20px", border: "2px solid #1a1a2e",
+            background: "#f0f4ff", fontSize: "0.88rem", lineHeight: 1.7,
+          }}>
+            🤖 <strong>The DQN Agent:</strong>
+            {dqnVsRule > 0
+              ? <>saves <strong>LKR {fmt(Math.round(dqnVsRule))}</strong> more in interest than the best rule-based strategy and finishes{" "}
+                  <strong>{Math.abs(bestRuleBased.monthsToPayoff - data.dqn_rl.monthsToPayoff)} month(s)</strong> earlier.</>
+              : <>pays <strong>LKR {fmt(Math.abs(Math.round(dqnVsRule)))}</strong> more in interest than the best rule-based strategy
+                  {" "}but applies a stress-aware payment approach that avoids over-commitment.</>
+            }
+          </div>
+        )}
+
         <div className="card">
           <div className="card-title">CHOOSE YOUR STRATEGY</div>
-          <p className="text-muted" style={{ marginTop: 0 }}>Click a strategy to see its full breakdown below.</p>
-          <div className="grid-2">
-            <StrategyCard result={data.avalanche} isRecommended={data.recommended === "avalanche"}
-              isSelected={selected === "avalanche"} onSelect={() => setSelected("avalanche")} />
-            <StrategyCard result={data.snowball}  isRecommended={data.recommended === "snowball"}
-              isSelected={selected === "snowball"}  onSelect={() => setSelected("snowball")} />
+          <p className="text-muted" style={{ marginTop: 0 }}>Click a strategy to see its full breakdown.</p>
+
+          <div className="grid-2" style={{ marginBottom: "12px" }}>
+            <StrategyCard
+              result={data.avalanche} isRecommended={data.recommended === "avalanche"}
+              isSelected={selected === "avalanche"} onSelect={() => setSelected("avalanche")}
+            />
+            <StrategyCard
+              result={data.snowball}  isRecommended={data.recommended === "snowball"}
+              isSelected={selected === "snowball"}  onSelect={() => setSelected("snowball")}
+            />
           </div>
-          {interestSaving !== 0 && (
-            <div className="info-banner">
-              {interestSaving > 0 ? (
-                <>The <strong>{selected.toUpperCase()}</strong> strategy saves you{" "}
-                  <strong>LKR {fmt(interestSaving)}</strong> in interest
-                  {monthDiff !== 0 && <> and pays off your debt{" "}
-                    <strong>{Math.abs(monthDiff)} month{Math.abs(monthDiff) !== 1 ? "s" : ""}{" "}
-                    {monthDiff > 0 ? "later" : "sooner"}</strong></>}.
-                </>
-              ) : (
-                <>The <strong>{altResult.strategy.toUpperCase()}</strong> strategy would save you{" "}
-                  <strong>LKR {fmt(Math.abs(interestSaving))}</strong> more in interest.</>
-              )}
+
+          {data.dqn_rl ? (
+            <StrategyCard
+              result={data.dqn_rl}  isRecommended={data.recommended === "dqn_rl"}
+              isSelected={selected === "dqn_rl"}    onSelect={() => setSelected("dqn_rl")}
+              accentColor="#1a1a2e"
+            />
+          ) : (
+            <div style={{
+              border: "2px dashed #ccc", padding: "20px", textAlign: "center",
+              color: "#aaa", fontSize: "0.88rem",
+            }}>
+              DQN AGENT — unavailable (start ml_service.py to enable)
+            </div>
+          )}
+
+          {selected !== "dqn_rl" && (() => {
+            const altResult = selected === "avalanche" ? data.snowball : data.avalanche;
+            const saving    = altResult.totalInterestPaid - activeResult.totalInterestPaid;
+            const monthDiff = altResult.monthsToPayoff - activeResult.monthsToPayoff;
+            if (saving === 0) return null;
+            return (
+              <div className="info-banner" style={{ marginTop: "12px" }}>
+                {saving > 0
+                  ? <>The <strong>{selected.toUpperCase()}</strong> strategy saves you{" "}
+                      <strong>LKR {fmt(saving)}</strong> in interest
+                      {monthDiff !== 0 && <> and pays off debt{" "}
+                        <strong>{Math.abs(monthDiff)} month{Math.abs(monthDiff) !== 1 ? "s" : ""}{" "}
+                        {monthDiff > 0 ? "later" : "sooner"}</strong></>}.</>
+                  : <>The <strong>{(altResult as StrategyResult).strategy.toUpperCase()}</strong> saves{" "}
+                      <strong>LKR {fmt(Math.abs(saving))}</strong> more in interest.</>
+                }
+              </div>
+            );
+          })()}
+        </div>
+
+        <div className="card">
+          <div className="card-title">
+            WHY{" "}
+            {selected === "dqn_rl" ? "DQN AGENT" : selected.toUpperCase()}?
+          </div>
+          <p style={{ lineHeight: "1.7" }}>{activeResult.explanation}</p>
+
+          {selected !== "dqn_rl" && (
+            <div style={{ marginTop: "16px", borderTop: "1px solid #ccc", paddingTop: "16px" }}>
+              <strong>HOW IT WORKS:</strong>
+              <ol className="text-muted" style={{ paddingLeft: "1.2rem", marginTop: "8px", lineHeight: "1.8" }}>
+                {selected === "avalanche" ? (
+                  <>
+                    <li>Pay the required minimum on every loan each month.</li>
+                    <li>Direct all remaining budget to the loan with the highest annual interest rate.</li>
+                    <li>When that loan reaches zero, roll its payment into the next highest-rate loan.</li>
+                    <li>Repeat until all debts are cleared.</li>
+                  </>
+                ) : (
+                  <>
+                    <li>Pay the required minimum on every loan each month.</li>
+                    <li>Direct all remaining budget to the loan with the smallest outstanding balance.</li>
+                    <li>When that loan reaches zero, roll its payment into the next smallest loan.</li>
+                    <li>Repeat until all debts are cleared.</li>
+                  </>
+                )}
+              </ol>
+            </div>
+          )}
+
+          {selected === "dqn_rl" && data.dqn_rl && (
+            <div style={{ marginTop: "16px", borderTop: "1px solid #ccc", paddingTop: "16px" }}>
+              <strong>HOW THE DQN AGENT WORKS:</strong>
+              <ol className="text-muted" style={{ paddingLeft: "1.2rem", marginTop: "8px", lineHeight: "1.8" }}>
+                <li>The agent was trained using Deep Q-Learning across thousands of simulated repayment episodes.</li>
+                <li>Each month it observes your income, expenses, loan payment, and debt-to-income ratio.</li>
+                <li>It selects from 5 payment levels (minimum → full disposable income) to maximise long-term reward.</li>
+                <li>The reward function penalises interest cost and financial stress while rewarding debt reduction.</li>
+                <li>This month the agent's dominant action is: <strong>{data.dqn_rl.dominantActionLabel}</strong>.</li>
+              </ol>
             </div>
           )}
         </div>
 
         <div className="card">
-          <div className="card-title">WHY {selected.toUpperCase()}?</div>
-          <p style={{ lineHeight: "1.7" }}>{activeResult.explanation}</p>
-          <div style={{ marginTop: "16px", borderTop: "1px solid #ccc", paddingTop: "16px" }}>
-            <strong>HOW IT WORKS:</strong>
-            <ol className="text-muted" style={{ paddingLeft: "1.2rem", marginTop: "8px", lineHeight: "1.8" }}>
-              {selected === "avalanche" ? (
-                <>
-                  <li>Pay the required minimum on every loan each month.</li>
-                  <li>Direct all remaining budget to the loan with the highest annual interest rate.</li>
-                  <li>When that loan reaches zero, roll its payment into the next highest-rate loan.</li>
-                  <li>Repeat until all debts are cleared.</li>
-                </>
-              ) : (
-                <>
-                  <li>Pay the required minimum on every loan each month.</li>
-                  <li>Direct all remaining budget to the loan with the smallest outstanding balance.</li>
-                  <li>When that loan reaches zero, roll its payment into the next smallest loan.</li>
-                  <li>Repeat until all debts are cleared.</li>
-                </>
-              )}
-            </ol>
+          <div className="card-title">
+            PROJECTED PAYMENT SCHEDULE —{" "}
+            {selected === "dqn_rl" ? "DQN AGENT" : selected.toUpperCase()}
           </div>
-        </div>
-
-        <div className="card">
-          <div className="card-title">PROJECTED PAYMENT SCHEDULE — {selected.toUpperCase()}</div>
           <p className="text-muted" style={{ marginTop: 0 }}>
-            Showing {showFullSchedule ? "all" : "first 12"} of {activeResult.schedule.length} months.
+            Showing {showFull ? "all" : "first 12"} of {schedule.length} months.
           </p>
           <div style={{ overflowX: "auto" }}>
             <table className="data-table">
@@ -171,12 +304,13 @@ export default function StrategyPage() {
                 <tr>
                   <th>Month</th>
                   <th className="right">Remaining Debt (LKR)</th>
-                  <th className="right">Interest This Month (LKR)</th>
+                  <th className="right">Interest (LKR)</th>
                   <th className="right">Principal Paid (LKR)</th>
+                  {selected === "dqn_rl" && <th>Agent Action</th>}
                 </tr>
               </thead>
               <tbody>
-                {scheduleToShow.map((row, i) => (
+                {(scheduleToShow as (MonthSnapshot & Partial<DQNMonthSnapshot>)[]).map((row, i) => (
                   <tr key={i}>
                     <td>{row.label}</td>
                     <td className="right">
@@ -186,15 +320,20 @@ export default function StrategyPage() {
                     </td>
                     <td className="right" style={{ color: "#c00" }}>{fmt(row.interestPaid)}</td>
                     <td className="right">{fmt(row.principalPaid)}</td>
+                    {selected === "dqn_rl" && (
+                      <td style={{ fontSize: "0.78rem", color: "#555" }}>
+                        {row.actionLabel ?? "—"}
+                      </td>
+                    )}
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
-          {activeResult.schedule.length > 12 && (
-            <button onClick={() => setShowFull(!showFullSchedule)}
+          {schedule.length > 12 && (
+            <button onClick={() => setShowFull(!showFull)}
               style={{ marginTop: "12px", fontSize: "0.9rem", padding: "0.6rem" }}>
-              {showFullSchedule ? "SHOW LESS" : `SHOW ALL ${activeResult.schedule.length} MONTHS`}
+              {showFull ? "SHOW LESS" : `SHOW ALL ${schedule.length} MONTHS`}
             </button>
           )}
         </div>
@@ -203,7 +342,6 @@ export default function StrategyPage() {
           <button onClick={() => navigate("/input")}>← UPDATE DATA</button>
           <button className="btn-primary" onClick={() => navigate("/progress")}>VIEW PROGRESS →</button>
         </div>
-
       </div>
     </PageLayout>
   );
