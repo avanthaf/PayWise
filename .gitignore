@@ -4,6 +4,7 @@ data/raw/
 data/processed/
 reports/eda/
 reports/baselines/
+reports/evaluation/
 
 src/__pycache__
 src/envs/__pycache__
