@@ -18,7 +18,7 @@ MODEL_PATH = PROJECT_ROOT / "artifacts/rl_models/dqn_debt_env"
 REPORT_DIR = PROJECT_ROOT / "reports/evaluation"
 REPORT_DIR.mkdir(parents=True, exist_ok=True)
 
-N_EPISODES = 30
+N_EPISODES = 50
 ALPHA = 0.05
 
 

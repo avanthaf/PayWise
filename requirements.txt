@@ -10,3 +10,4 @@ pyarrow
 torch
 stable-baselines3
 gymnasium
+pytest
