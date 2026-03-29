@@ -122,7 +122,6 @@ def test_snowball_finishes_within_600_months():
 
 
 def test_total_paid_greater_than_total_debt():
-    """Total paid must always exceed original debt due to interest."""
     original_debt = sum(l["balance"] for l in TWO_LOANS)
     result = calculate_repayment(TWO_LOANS, MONTHLY_BUDGET, "avalanche")
     assert result["total_paid"] >= original_debt, \
@@ -130,7 +129,6 @@ def test_total_paid_greater_than_total_debt():
 
 
 def test_higher_budget_pays_off_faster():
-    """Higher monthly budget should reduce payoff time."""
     result_low = calculate_repayment(TWO_LOANS, 20000, "avalanche")
     result_high = calculate_repayment(TWO_LOANS, 40000, "avalanche")
     assert result_high["months_to_payoff"] < result_low["months_to_payoff"], \
@@ -138,19 +136,13 @@ def test_higher_budget_pays_off_faster():
 
 
 def test_higher_budget_reduces_interest():
-    """Higher monthly budget should reduce total interest paid."""
     result_low = calculate_repayment(TWO_LOANS, 20000, "avalanche")
     result_high = calculate_repayment(TWO_LOANS, 40000, "avalanche")
     assert result_high["total_interest"] < result_low["total_interest"], \
         "Higher budget should reduce total interest"
 
 
-# ── Avalanche vs Snowball comparison ──────────────────────────────────────────
 def test_avalanche_less_interest_than_snowball():
-    """
-    Avalanche always pays the highest interest rate first,
-    so it should result in less total interest than Snowball.
-    """
     avalanche = calculate_repayment(TWO_LOANS, MONTHLY_BUDGET, "avalanche")
     snowball = calculate_repayment(TWO_LOANS, MONTHLY_BUDGET, "snowball")
     assert avalanche["total_interest"] <= snowball["total_interest"], \
@@ -158,22 +150,18 @@ def test_avalanche_less_interest_than_snowball():
 
 
 def test_both_strategies_same_budget():
-    """Both strategies use the same monthly budget."""
     avalanche = calculate_repayment(TWO_LOANS, MONTHLY_BUDGET, "avalanche")
     snowball = calculate_repayment(TWO_LOANS, MONTHLY_BUDGET, "snowball")
     assert avalanche["monthly_budget"] == snowball["monthly_budget"]
 
 
-# ── Edge cases ────────────────────────────────────────────────────────────────
 def test_budget_exactly_minimum():
-    """If budget equals minimum payments only, debt still reduces (no extra)."""
     min_budget = sum(l["minimumPayment"] for l in TWO_LOANS)
     result = calculate_repayment(TWO_LOANS, min_budget, "avalanche")
     assert result["months_to_payoff"] > 0
 
 
 def test_single_loan_avalanche_snowball_same():
-    """With one loan, avalanche and snowball must give identical results."""
     avalanche = calculate_repayment(SINGLE_LOAN, MONTHLY_BUDGET, "avalanche")
     snowball = calculate_repayment(SINGLE_LOAN, MONTHLY_BUDGET, "snowball")
     assert avalanche["months_to_payoff"] == snowball["months_to_payoff"]
@@ -181,7 +169,6 @@ def test_single_loan_avalanche_snowball_same():
 
 
 def test_zero_interest_loan():
-    """A 0% interest loan should have no interest charges."""
     zero_interest_loan = [
         {"label": "Family Loan", "balance": 100000,
          "interestRate": 0.0, "minimumPayment": 5000},

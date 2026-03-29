@@ -1,28 +1,3 @@
-"""
-evaluate_dqn.py
----------------
-Evaluates the trained DQN model and produces:
-
-  1. Reward curve     — mean episodic reward over 50 evaluation episodes
-  2. Policy heatmap   — what action the DQN recommends across different
-                        debt-to-income ratios and income levels
-  3. Summary metrics  — mean reward, std, min, max printed + saved to CSV
-
-Place in: src/evaluation/evaluate_dqn.py
-
-Usage:
-    python src/evaluation/evaluate_dqn.py
-
-Inputs:
-    artifacts/rl_models/dqn_debt_env.zip
-    data/processed/unified_financial_state.parquet
-
-Outputs:
-    reports/evaluation/dqn_reward_curve.png
-    reports/evaluation/dqn_policy_heatmap.png
-    reports/evaluation/dqn_eval_summary.csv
-"""
-
 from src.envs.debt_env import DebtEnv
 from stable_baselines3 import DQN
 import matplotlib.ticker as mticker
@@ -38,22 +13,15 @@ matplotlib.use("Agg")
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(PROJECT_ROOT))
 
-
-# ── Paths ─────────────────────────────────────────────────────────────────────
 DATA_PATH = PROJECT_ROOT / "data/processed/unified_financial_state.parquet"
 MODEL_PATH = PROJECT_ROOT / "artifacts/rl_models/dqn_debt_env"
 REPORT_DIR = PROJECT_ROOT / "reports/evaluation"
 REPORT_DIR.mkdir(parents=True, exist_ok=True)
 
-N_EVAL_EPISODES = 50   # episodes for reward curve
+N_EVAL_EPISODES = 50
 
 
-# ── 1. Evaluate model across N episodes ──────────────────────────────────────
 def evaluate_model(model, n_episodes: int = N_EVAL_EPISODES):
-    """
-    Run the DQN policy deterministically for n_episodes.
-    Returns list of total rewards, one per episode.
-    """
     env = DebtEnv(str(DATA_PATH))
     episode_rewards = []
 
@@ -78,7 +46,6 @@ def evaluate_model(model, n_episodes: int = N_EVAL_EPISODES):
     return episode_rewards
 
 
-# ── 2. Plot reward curve ──────────────────────────────────────────────────────
 def plot_reward_curve(rewards: list):
     episodes = list(range(1, len(rewards) + 1))
 
@@ -116,13 +83,7 @@ def plot_reward_curve(rewards: list):
     print(f"\n  ✓ Reward curve saved → {out}")
 
 
-# ── 3. Policy heatmap ─────────────────────────────────────────────────────────
 def plot_policy_heatmap(model):
-    """
-    Show which action the DQN recommends across a grid of
-    debt-to-income ratio (y) vs monthly income (x).
-    Gives intuition on what the model has learned.
-    """
     dti_range = np.linspace(0.1, 2.5, 25)   # debt-to-income ratio
     income_range = np.linspace(20000, 200000, 25)  # monthly income (LKR)
 
@@ -184,7 +145,6 @@ def plot_policy_heatmap(model):
     print(f"  ✓ Policy heatmap saved → {out}")
 
 
-# ── 4. Save summary CSV ───────────────────────────────────────────────────────
 def save_summary(rewards: list):
     summary = {
         "n_episodes":   [N_EVAL_EPISODES],
@@ -210,7 +170,6 @@ def save_summary(rewards: list):
     print(f"  ✓ Summary saved → {out}")
 
 
-# ── Main ──────────────────────────────────────────────────────────────────────
 def main():
     print(f"\n{'='*55}")
     print("  DQN Evaluation")
