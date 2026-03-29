@@ -10,4 +10,7 @@ pyarrow
 torch
 stable-baselines3
 gymnasium
-flask
+pytest
+scipy
+tensorboard
+tqdm
