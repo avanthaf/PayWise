@@ -14,3 +14,7 @@ src/training_dqn/__pycache__
 src/tests/__pycache__
 
 artifacts/
+
+__pycache__
+
+.pytest_cache
