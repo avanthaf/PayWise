@@ -1,3 +1,9 @@
-# Common Module
+# Paywise
 
-This folder contains shared components used by both the **DQN training system** and the **PayWise application**.
+A Personalized Debt Repayment Optimization using Deep Reinforcement Learning 
+
+A Project Proposal by Avantha Fonseka 
+W1866984 | 20200871 
+
+
+Supervised by Uthpala Sooriya-Arachchi
