@@ -1,3 +1,7 @@
+// AI Usage Note:
+// Some parts of this implementation were assisted by AI tools such as Claude code and Figma AI.
+// All code was reviewed and validated by the author.
+
 import { useState, useEffect } from "react";
 import PageLayout from "../components/PageLayout";
 import { useNavigate } from "react-router-dom";

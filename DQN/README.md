@@ -11,7 +11,7 @@ This document covers the full machine learning pipeline for PayWise — from raw
 ```
 src/
 ├── data_loading.py              # Dataset loaders
-├── data_preprocessing.py        # Cleaning & normalisation
+├── data_preprocessing.py        # Cleaning & normalization
 ├── data_outliers.py             # Outlier detection & capping
 ├── data_encoding.py             # Categorical encoding
 ├── data_model_ready.py          # Feature selection & scaling
@@ -25,7 +25,7 @@ src/
 │   ├── test_env.py              # Smoke-test the environment
 │   └── test_debt_env.py         # Full unit tests for DebtEnv
 ├── rl/
-│   ├── train_dqn.py             # Parameterised DQN training (canonical)
+│   ├── train_dqn.py             # Parameterized DQN training (canonical)
 │   ├── test_repayment_engine.py # Unit tests for repayment logic
 │   └── evaluate_dqn.py          # Post-training evaluation & plots
 └── evaluation/
@@ -37,7 +37,7 @@ src/
 
 ## Running the Full Pipeline
 
-```bash
+```
 # 1. Create and activate virtual environment
 python -m venv venv
 venv\Scripts\activate
@@ -71,3 +71,10 @@ python -m src.rl.test_repayment_engine
 python src/rl/evaluate_dqn.py
 python src/evaluation/benchmark_strategies.py
 python src/evaluation/compare_strategies.py
+
+```
+
+## AI Usage Declaration
+
+AI tools such as ChatGPT, Claude, Gemini, and Figma AI were used to assist with coding, debugging, UI design, and understanding concepts like Deep Q-Networks (DQN).
+All outputs were reviewed, modified, and validated by the author.

@@ -1,3 +1,7 @@
+# AI Usage Note:
+# Some parts of this implementation were assisted by AI tools such as ChatGPT and Claude code.
+# All code was reviewed and validated by the author.
+
 import numpy as np
 import pandas as pd
 import gymnasium as gym

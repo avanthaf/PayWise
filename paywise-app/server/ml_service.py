@@ -1,3 +1,7 @@
+# AI Usage Note:
+# Some parts of this implementation were assisted by AI tools such as ChatGPT and Claude code.
+# All code was reviewed and validated by the author.
+
 import os
 import sys
 import math
@@ -14,7 +18,7 @@ MODEL_PATH = BASE_DIR / "artifacts" / "rl_models" / "dqn_debt_final"
 SCALER_PATH = BASE_DIR / "artifacts" / \
     "scalers" / "tracker_dataset_scaler.joblib"
 
-MAX_MONTHS = 600
+MAX_MONTHS = 600  # 50-year safety cap to prevent infinite loops if debt never resolves
 
 app = Flask(__name__)
 
@@ -41,12 +45,18 @@ def month_label(offset: int) -> str:
 
 
 def normalize(obs: np.ndarray) -> np.ndarray:
+    """The scaler was fitted on a larger feature set during training. We slice
+    only the first n_features entries so the service can run with a reduced
+    observation space without retraining the scaler.
+    Falls back to raw values if the scaler is unavailable or incompatible.
+    """
     if scaler is None:
         return obs
     try:
         arr = obs.reshape(1, -1)
         n_features = arr.shape[1]
         if hasattr(scaler, "mean_") and len(scaler.mean_) >= n_features:
+            # Slice scaler statistics to match the current observation size
             mean = scaler.mean_[:n_features]
             scale = scaler.scale_[:n_features]
             return ((arr - mean) / scale).flatten().astype(np.float32)
@@ -57,6 +67,14 @@ def normalize(obs: np.ndarray) -> np.ndarray:
 
 
 def compute_payment(action: int, min_payment: float, disposable: float) -> float:
+    """The DQN action space has 5 levels to check how aggressively
+    the agent chooses to repay debt beyond the required minimum payment:
+      0 → minimum only (least aggressive)
+      1 → minimum + 10% of disposable income
+      2 → minimum + 25% of disposable income
+      3 → minimum + 50% of disposable income
+      4 → minimum + 100% of disposable income (most aggressive)
+    """
     if action == 0:
         return min_payment
     elif action == 1:
@@ -103,6 +121,8 @@ def simulate_dqn(
         if outstanding_debt <= 0.01:
             break
 
+        # Build the 4-feature observation vector the DQN was trained on:
+        # [income, total_expenses, total_min_payment, debt-to-income ratio]
         raw_obs = np.array(
             [income, total_expenses, total_min_payment, dti],
             dtype=np.float32,
@@ -118,9 +138,9 @@ def simulate_dqn(
         total_interest_paid += interest
 
         payment = compute_payment(action, total_min_payment, disposable)
-        payment = max(payment, total_min_payment)
-        payment = min(payment, 0.5 * outstanding_debt)
-        payment = min(payment, outstanding_debt)
+        payment = max(payment, total_min_payment)          # always meet the minimum
+        payment = min(payment, 0.5 * outstanding_debt)    # cap at 50% of debt to avoid unrealistic single-month payoffs
+        payment = min(payment, outstanding_debt)           # never overpay the remaining balance
 
         principal_paid = payment - interest
         outstanding_debt -= payment

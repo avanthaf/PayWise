@@ -1,3 +1,7 @@
+// AI Usage Note:
+// Some parts of this implementation were assisted by AI tools such as Claude code and Figma AI.
+// All code was reviewed and validated by the author.
+
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import RegisterPage from "./pages/RegisterPage";

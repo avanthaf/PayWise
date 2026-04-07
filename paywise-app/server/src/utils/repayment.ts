@@ -1,6 +1,10 @@
+// AI Usage Note:
+// Some parts of this implementation were assisted by AI tools such as ChatGPT and Claude code.
+// All code was reviewed and validated by the author.
+
 export interface LoanInput {
   label: string;
-  balance: number;   
+  balance: number;
   interestRate: number;  
   minimumPayment: number;
 }
@@ -25,7 +29,7 @@ export interface RepaymentResult {
   explanation: string;
 }
 
-const MAX_MONTHS = 600;
+const MAX_MONTHS = 600; // 50-year safety cap to prevent infinite loops if debt never resolves
 
 function formatMonthLabel(startDate: Date, offset: number): string {
   const d = new Date(startDate);

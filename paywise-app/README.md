@@ -70,4 +70,7 @@ npm run build
 # Output in dist/
 ```
 
----
+## AI Usage Declaration
+
+AI tools such as ChatGPT, Claude, Gemini, and Figma AI were used to assist with coding, debugging, UI design, and understanding concepts like Deep Q-Networks (DQN).
+All outputs were reviewed, modified, and validated by the author.

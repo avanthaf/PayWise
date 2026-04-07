@@ -1,3 +1,7 @@
+# AI Usage Note:
+# Some parts of this implementation were assisted by AI tools such as ChatGPT and Claude code.
+# All code was reviewed and validated by the author.
+
 from src.envs.debt_env import DebtEnv
 from stable_baselines3 import DQN
 import matplotlib.ticker as mticker
