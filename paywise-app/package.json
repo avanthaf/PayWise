@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "concurrently -n \"ML,API,UI\" -c \"blue,green,magenta\" \"npm run ml\" \"npm run api\" \"npm run ui\"",
-    "ml":  "cd server && ..\\venv\\Scripts\\python.exe ml_service.py",
+    "ml":  "cd server && ..\\..\\DQN\\venv\\Scripts\\python.exe ml_service.py",
     "api": "cd server && npm run dev",
     "ui":  "cd client && npm run dev"
   },
